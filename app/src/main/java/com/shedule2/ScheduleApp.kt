@@ -389,9 +389,17 @@ fun ScheduleApp() {
             }
 
             val result = withContext(Dispatchers.IO) { performanceApi.fetchPerformance(login) }
+            val planResult = withContext(Dispatchers.IO) { performanceApi.fetchPlan(login) }
+
+            val reportTypes = if (planResult is PerformanceResult.Success) {
+                runCatching { PerformanceParser.parsePlan(planResult.json) }.getOrDefault(emptyMap())
+            } else {
+                emptyMap()
+            }
+
             when (result) {
                 is PerformanceResult.Success -> {
-                    val parsed = runCatching { PerformanceParser.parse(result.json) }.getOrNull()
+                    val parsed = runCatching { PerformanceParser.parse(result.json, reportTypes) }.getOrNull()
                     if (parsed == null) {
                         performanceError = "Не удалось разобрать ответ."
                     } else {
@@ -498,11 +506,71 @@ fun ScheduleApp() {
                 return@launch
             }
 
-            val subjects = withContext(Dispatchers.IO) {
+            val rawSubjects = withContext(Dispatchers.IO) {
                 courseIds.mapNotNull { id ->
                     when (val res = eduApi.fetchGradeHtml(id)) {
                         is EduPageResult.Success -> EduParser.parseSubject(res.html, fallbackName = "Курс #$id")
                         is EduPageResult.Error -> null
+                    }
+                }
+            }
+
+            // Fetch performance data if not already loaded to ensure proper filtering and naming
+            val perfDataForFilter = performanceData ?: withContext(Dispatchers.IO) {
+                val perfResult = performanceApi.fetchPerformance(login)
+                val planResult = performanceApi.fetchPlan(login)
+                val reportTypes = if (planResult is PerformanceResult.Success) {
+                    runCatching { PerformanceParser.parsePlan(planResult.json) }.getOrDefault(emptyMap())
+                } else emptyMap()
+                
+                if (perfResult is PerformanceResult.Success) {
+                    runCatching { PerformanceParser.parse(perfResult.json, reportTypes) }.getOrNull()
+                } else null
+            }
+
+            val subjects = if (perfDataForFilter != null) {
+                rawSubjects.mapNotNull { eduSubject ->
+                    val isEduKursovik = eduSubject.name.contains("курсовая", ignoreCase = true) || 
+                                       eduSubject.name.contains("курсов", ignoreCase = true)
+                    val isEduPractice = eduSubject.name.contains("практика", ignoreCase = true)
+
+                    if (isEduKursovik || isEduPractice) {
+                        // Course works and practices are not synced with LK. They keep their original Edu name.
+                        val type = if (isEduKursovik) "курсовая работа" else "практика"
+                        return@mapNotNull eduSubject.copy(reportType = type)
+                    }
+
+                    val matchedPerf = perfDataForFilter.subjects.find { perfSubj ->
+                        val isPerfKursovik = perfSubj.name.contains("курсовая", ignoreCase = true) || 
+                                           perfSubj.name.contains("курсов", ignoreCase = true)
+                        val isPerfPractice = perfSubj.name.contains("практика", ignoreCase = true)
+                        
+                        // Ignore LK course works/practices when syncing regular subjects
+                        if (isPerfKursovik || isPerfPractice) return@find false
+
+                        val canonicalEdu = PerformanceParser.canonicalizeName(eduSubject.name)
+                        val canonicalPerf = PerformanceParser.canonicalizeName(perfSubj.name)
+                        
+                        (canonicalPerf.isNotEmpty() && (canonicalEdu.contains(canonicalPerf) || canonicalPerf.contains(canonicalEdu))) || 
+                        (perfSubj.name.isNotEmpty() && (eduSubject.name.contains(perfSubj.name, ignoreCase = true) || perfSubj.name.contains(eduSubject.name, ignoreCase = true)))
+                    }
+                    
+                    if (matchedPerf != null) {
+                        // For regular subjects, only include if matched
+                        eduSubject.copy(name = matchedPerf.name, reportType = matchedPerf.reportType)
+                    } else null
+                }
+            } else {
+                // If performance data is still totally unavailable
+                rawSubjects.mapNotNull { eduSubject ->
+                    val isEduKursovik = eduSubject.name.contains("курсовая", ignoreCase = true) || 
+                                       eduSubject.name.contains("курсов", ignoreCase = true)
+                    val isEduPractice = eduSubject.name.contains("практика", ignoreCase = true)
+                    if (isEduKursovik || isEduPractice) {
+                        val type = if (isEduKursovik) "курсовая работа" else "практика"
+                        eduSubject.copy(reportType = type)
+                    } else {
+                        eduSubject
                     }
                 }
             }
@@ -636,6 +704,7 @@ fun ScheduleApp() {
             data = performanceData,
             isLoading = performanceLoading,
             errorText = performanceError,
+            source = "ЛК",
             onRefresh = { loadPerformance() },
             onBack = { showPerformanceScreen = false }
         )
@@ -647,6 +716,7 @@ fun ScheduleApp() {
             data = eduData,
             isLoading = eduLoading,
             errorText = eduError,
+            source = "Edu",
             onRefresh = { loadEdu() },
             onBack = { showEduScreen = false }
         )

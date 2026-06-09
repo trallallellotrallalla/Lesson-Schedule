@@ -54,6 +54,7 @@ fun PerformanceScreen(
     data: PerformanceData?,
     isLoading: Boolean,
     errorText: String?,
+    source: String = "ЛК",
     onRefresh: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -63,7 +64,7 @@ fun PerformanceScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Успеваемость на $todayLabel") },
+                title = { Text("Успеваемость ($source) на $todayLabel") },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
@@ -223,11 +224,16 @@ private fun subjectCurrentPoints(subject: PerformanceSubject): Int {
     return subject.currentPoints.toIntOrNull() ?: 0
 }
 
-private fun totalPointsColor(points: Int): Color = when {
-    points < 50 -> Color(0xFFD32F2F)
-    points < 70 -> Color(0xFFF57C00)
-    points < 85 -> Color(0xFF03A9F4)
-    else -> Color(0xFF2E7D32)
+private fun totalPointsColor(points: Int, reportType: String?): Color {
+    val isCredit = reportType?.contains("зачет", ignoreCase = true) == true &&
+                   reportType.contains("диф", ignoreCase = true) == false
+    return when {
+        isCredit -> if (points < 50) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+        points < 50 -> Color(0xFFD32F2F)
+        points < 70 -> Color(0xFFF57C00)
+        points < 85 -> Color(0xFF03A9F4)
+        else -> Color(0xFF2E7D32)
+    }
 }
 
 @Composable
@@ -266,17 +272,26 @@ private fun SubjectCard(subject: PerformanceSubject) {
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = subject.name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f)
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = subject.name,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    subject.reportType?.let {
+                        Text(
+                            text = it,
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Normal
+                        )
+                    }
+                }
                 Text(
                     text = formatTotalOverHundred(subject),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = totalPointsColor(subjectCurrentPoints(subject)),
+                    color = totalPointsColor(subjectCurrentPoints(subject), subject.reportType),
                     modifier = Modifier.padding(end = 4.dp)
                 )
                 IconButton(
