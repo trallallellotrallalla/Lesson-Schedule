@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widgetRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp"
+    android:background="@drawable/widget_root_bg">
+
+    <LinearLayout
+        android:id="@+id/widgetHeaderRow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/widgetDayCaption"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Расписание не загружено"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1565C0" />
+
+        <TextView
+            android:id="@+id/widgetDateText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:gravity="end"
+            android:maxLines="1"
+            android:text="Нет даты"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:textColor="#0D47A1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/widgetDayControls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/widgetPreviousDayButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_button_bg"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="&lt; День"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/widgetRefreshButton"
+            android:layout_width="40dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/widget_button_bg"
+            android:padding="6dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_refresh"
+            android:contentDescription="Обновить расписание" />
+
+        <TextView
+            android:id="@+id/widgetNextDayButton"
+            android:layout_width="0dp"
+            android:layout_height="34dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/widget_button_bg"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="День &gt;"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/widgetLessonList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="6dp"
+        android:divider="#EAF3FF"
+        android:dividerHeight="6dp"
+        android:cacheColorHint="#EAF3FF"
+        android:transcriptMode="disabled" />
+
+    <TextView
+        android:id="@+id/widgetEmptyText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="Нет данных"
+        android:textColor="#1565C0"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
+</LinearLayout>

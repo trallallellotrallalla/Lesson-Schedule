@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp"
+    android:background="@drawable/widget_lesson_card_bg">
+
+    <TextView
+        android:id="@+id/widgetLessonTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🕒 09:00-10:30"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:textColor="#0D47A1" />
+
+    <TextView
+        android:id="@+id/widgetLessonTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:text="Математический анализ"
+        android:textStyle="bold"
+        android:textSize="13sp"
+        android:textColor="#102A43" />
+
+    <TextView
+        android:id="@+id/widgetLessonMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:text="Лекция • 📍 101 • 👤 Иванов И.И."
+        android:textSize="11sp"
+        android:textColor="#3F6FA8" />
+
+</LinearLayout>
